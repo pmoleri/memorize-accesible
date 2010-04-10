@@ -21,6 +21,7 @@ from os.path import join, dirname
 from gettext import gettext as _
 from sugar.graphics.toolbutton import ToolButton
 from sugar.graphics.toolcombobox import ToolComboBox
+from sugar.graphics.toggletoolbutton import ToggleToolButton
 from sugar.graphics.objectchooser import ObjectChooser
 from sugar import profile
 
@@ -44,7 +45,8 @@ class MemorizeToolbar(gtk.Toolbar):
                             ]
 
     __gsignals__ = {
-    'game_changed': (SIGNAL_RUN_FIRST, None, 5 * [TYPE_PYOBJECT])
+        'game_changed': (SIGNAL_RUN_FIRST, None, 5 * [TYPE_PYOBJECT]),
+        'accesible_toggled': (SIGNAL_RUN_FIRST, None, [TYPE_PYOBJECT])
     }
     
     def __init__(self, activity):
@@ -102,6 +104,11 @@ class MemorizeToolbar(gtk.Toolbar):
         self._game_combo.combo.set_active(0)
         self._game_combo.combo.connect('changed', self._game_changed_cb)
         self._add_widget(self._game_combo)
+    
+        # Accesible mode checkbox
+        self._accesible = gtk.CheckButton(_('Accesible'))
+        self._accesible.connect('toggled', self._toggle_accesible)
+        self._add_widget(self._accesible)
     
     def _add_widget(self, widget, expand=False):
         tool_item = gtk.ToolItem()
@@ -164,6 +171,9 @@ class MemorizeToolbar(gtk.Toolbar):
         self.emit('game_changed', game_file, game_size, 'demo', title, None)
         self._game_combo.combo.set_active(0)
         
+    def _toggle_accesible(self, checkbutton):
+        self.emit('accesible_toggled', checkbutton.get_active())
+
     def update_toolbar(self, widget, data, grid):
         size = data.get('size')
         self._size_combo.combo.handler_block(self.size_handle_id)

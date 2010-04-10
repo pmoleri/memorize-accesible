@@ -1,9 +1,9 @@
 [Activity]
-name = Memorize
-bundle_id = org.laptop.Memorize
+name = MemorizeAccesible
+bundle_id = org.ceibaljam.MemorizeAccesible
 exec = sugar-activity activity.MemorizeActivity
-icon = activity-memorize
-activity_version = 34
+icon = activity-memorize-accesible
+activity_version = 1
 show_launcher = yes
 mime_types = application/x-memorize-project;
 license = GPLv2+

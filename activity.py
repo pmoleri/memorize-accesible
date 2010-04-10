@@ -111,6 +111,7 @@ class MemorizeActivity(Activity):
         self.game.connect('change_game', self._memorizeToolbar.update_toolbar)
         
         self._memorizeToolbar.connect('game_changed', self.game.change_game)
+        self._memorizeToolbar.connect('accesible_toggled', self.table.toggle_accesibility)
         
         self.hbox = gtk.HBox(False)
         self.set_canvas(self.hbox)
@@ -317,10 +318,10 @@ class MemorizeActivity(Activity):
             _logger.debug("buddy left: %s", buddy.props.nick)
             self.game.rem_buddy(buddy)
 
-    def _focus_in(self, event, data=None):        
+    def _focus_in(self, event, data=None):
         self.game.audio.play()
         
-    def _focus_out(self, event, data=None):                
+    def _focus_out(self, event, data=None):
         self.game.audio.pause()
         
     def _cleanup_cb(self, data=None):        

@@ -42,7 +42,7 @@ class SvgCard(gtk.EventBox):
     default_props['back'] = {'fill_color':'#b2b3b7', 'stroke_color':'#b2b3b7',
                              'opacity':'1'}
     default_props['back_h'] = {'fill_color':'#b2b3b7',
-                               'stroke_color':'#ffffff', 'opacity':'1'}
+                               'stroke_color':'#C00000', 'opacity':'1'}
     default_props['back_text'] = {'text_color':'#c7c8cc'}
     default_props['front'] = {'fill_color':'#4c4d4f', 'stroke_color':'#ffffff',
                               'opacity':'1'}

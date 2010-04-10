@@ -22,6 +22,7 @@ import os
 import math
 import gc
 from gobject import SIGNAL_RUN_FIRST, TYPE_PYOBJECT
+import gobject
 
 import logging
 _logger = logging.getLogger('memorize-activity')
@@ -66,6 +67,10 @@ class CardTable(gtk.EventBox):
         self.load_mode = False
         self.dict = None
         self.show_all()
+        
+        # Sets the game to run in accesible mode:
+        self.accesible = False  # This should be optional
+        self.scanning_id = 0
 
     def _allocate_cb(self, widget, allocation):
         size = allocation.height
@@ -154,7 +159,71 @@ class CardTable(gtk.EventBox):
             self._set_load_mode(False)
         self.show_all()
         #gc.collect()
+        
+        # If necessary starts scanning for accesibility
+        self.restart_scanning()
 
+    def restart_scanning(self):
+        # Increments scanning_id so new games will not be scanned by old timers
+        self.scanning_id += 1
+        
+        # accesible game scanning info
+        if self.accesible:
+            self.scanning_status = {
+                "direction": "F",
+                "row": self.size - 1,   # Initialized in last row, so the next is the first
+                "column": 0
+            }
+            # Scanning will occur every two seconds <- this should be configurable
+            gobject.timeout_add(2000, self.scan_next, self.scanning_id)
+    
+    def scan_next(self, id):
+        if self.scanning_id != id:
+            if self.scanning_status["direction"] == 'F':
+                # Unhighlights last row
+                self.paint_cards(False, self.scanning_status["row"], None)                
+            elif self.scanning_status["direction"] == 'C':
+                # Unhighlights last card
+                self.paint_cards(False, self.scanning_status["row"], self.scanning_status["column"])
+                
+            # This event is from a previous game, disable the timer returning False
+            return False
+        
+        # self.scanning_status = {
+        #    "direction": "F",
+        #    "row":0,
+        #    "column":0
+        #}
+        
+        if self.scanning_status["direction"] == 'F':
+            # Unhighlights last row and hightlights next full row
+            self.paint_cards(False, self.scanning_status["row"], None)
+            self.scanning_status["row"] = (self.scanning_status["row"] + 1) % self.size
+            self.paint_cards(True, self.scanning_status["row"], None)
+            
+        elif self.scanning_status["direction"] == 'C':
+            # Unhighlights last card and highlights next card in the row
+            self.paint_cards(False, self.scanning_status["row"], self.scanning_status["column"])
+            self.scanning_status["column"] = (self.scanning_status["column"] + 1) % self.size
+            self.paint_cards(True, self.scanning_status["row"], self.scanning_status["column"])
+        
+        return True # So the timer continues calling this function
+    
+    def paint_cards(self, pintar, row, column=None):
+        first_card = row * self.size # Identifier of the first card in the row
+        if column is None:
+            for column in range(0, self.size):
+                if first_card + column < len(self.cards):
+                    self.highlight_card(None, first_card + column, pintar)
+        else:
+            if first_card + column < len(self.cards):
+                self.highlight_card(None, first_card + column, pintar)
+    
+    def toggle_accesibility(self, widget, accesible):
+        print accesible
+        self.accesible = accesible
+        self.restart_scanning()
+    
     def change_game(self, widget, data, grid):
         if not self.first_load:
             for card in self.cards.values():
@@ -169,11 +238,13 @@ class CardTable(gtk.EventBox):
         return x
 
     def mouse_event(self, widget, event, coord):
-        #self.table.grab_focus()
-        card = self.cards[coord[0], coord[1]]
-        identifier = self.cd2id.get(card)
-        self.emit('card-highlighted', identifier, True)
-        self.selected_card = (coord[0], coord[1])
+        # In accesible mode mouse event doesn't highlight cards, the highlighting occurs through the scanning
+        if not self.accesible:
+            #self.table.grab_focus()
+            card = self.cards[coord[0], coord[1]]
+            identifier = self.cd2id.get(card)
+            self.emit('card-highlighted', identifier, True)
+            self.selected_card = (coord[0], coord[1])
 
     def key_press_event(self, widget, event):
         #self.table.grab_focus()
@@ -209,9 +280,29 @@ class CardTable(gtk.EventBox):
             self.card_flipped(card)
     
     def flip_card_mouse(self, widget, event, identifier):
-        position = self.dict[identifier]
-        card = self.cards[position]
-        self.card_flipped(card)
+        if self.accesible:
+            if self.scanning_status["direction"] == 'F':
+                # Turn off row highlight
+                self.paint_cards(False, self.scanning_status["row"], None)
+                
+                # Change to column scanning
+                self.scanning_status["direction"] = 'C'
+                
+                # Sets the first column as highlighted
+                self.scanning_status["column"] = 0
+                self.paint_cards(True, self.scanning_status["row"], 0)
+                
+            else:
+                # Flips the selected cards and go back to row scanning
+                identifier = self.scanning_status["row"] * self.size + self.scanning_status["column"]
+                position = self.dict[identifier]
+                card = self.cards[position]
+                self.card_flipped(card)
+                self.scanning_status["direction"] = 'F'
+        else:
+            position = self.dict[identifier]
+            card = self.cards[position]
+            self.card_flipped(card)
 
     def card_flipped(self, card):
         identifer  = self.cd2id[card]
