@@ -262,6 +262,13 @@ msgstr "Polaco"
 msgid "Esperanto"
 msgstr "Esperanto"
 
+# ACCESIBILITY (manually added)
+msgid "Accessibility"
+msgstr "Accesibilidad"
+
+msgid "Accessible"
+msgstr "Accesibile"
+
 #~ msgid "Choose image"
 #~ msgstr "Escoger imagen"
 

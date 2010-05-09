@@ -44,6 +44,7 @@ import game
 import messenger
 import memorizetoolbar
 import createtoolbar
+import accessibilitytoolbar
 import cardlist
 import createcardpanel
 import face
@@ -53,7 +54,7 @@ IFACE = SERVICE
 PATH = '/org/laptop/Memorize'
 
 _TOOLBAR_PLAY = 1
-_TOOLBAR_CREATE = 2
+_TOOLBAR_CREATE = 3
 
 class MemorizeActivity(Activity):
     
@@ -65,11 +66,15 @@ class MemorizeActivity(Activity):
         
         toolbox = ActivityToolbox(self)
         activity_toolbar = toolbox.get_activity_toolbar()
-        
+
         self._memorizeToolbar = memorizetoolbar.MemorizeToolbar(self)
         toolbox.add_toolbar(_('Play'), self._memorizeToolbar)
-        self._memorizeToolbar.show()  
-
+        self._memorizeToolbar.show()
+        
+        self._accessibility_toolbar = accessibilitytoolbar.AccessibilityToolbar(self)
+        toolbox.add_toolbar(_('Accessibility'), self._accessibility_toolbar)
+        self._accessibility_toolbar.show()
+        
         self._createToolbar = createtoolbar.CreateToolbar(self)
         toolbox.add_toolbar(_('Create'), self._createToolbar)
         self._createToolbar.show()
@@ -111,7 +116,7 @@ class MemorizeActivity(Activity):
         self.game.connect('change_game', self._memorizeToolbar.update_toolbar)
         
         self._memorizeToolbar.connect('game_changed', self.game.change_game)
-        self._memorizeToolbar.connect('accesible_toggled', self.table.toggle_accesibility)
+        self._accessibility_toolbar.connect('accessibility_changed', self.table.accessibility_changed)
         
         self.hbox = gtk.HBox(False)
         self.set_canvas(self.hbox)
